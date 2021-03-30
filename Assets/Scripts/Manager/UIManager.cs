@@ -70,10 +70,15 @@ public class UIManager : MonoBehaviour
         DamageText.SetActive(true);
         float x = DamageText_Text.rectTransform.anchoredPosition.x;
         float y = DamageText_Text.rectTransform.anchoredPosition.y;
-        DamageText_Text.rectTransform.DOAnchorPosX(x + UnityEngine.Random.Range(-100, 100), time);
-        DamageText_Text.rectTransform.DOScale(2f, time);
-        DamageText_Text.rectTransform.DOAnchorPosY(y+100f, time/4);      
-        DamageText_Text.rectTransform.DOAnchorPosY(y +50, time / 4);
+        var s = DOTween.Sequence();
+        Tweener moveX = DamageText_Text.rectTransform.DOAnchorPosX(x + UnityEngine.Random.Range(-100, 100), time);
+        Tweener scale = DamageText_Text.rectTransform.DOScale(1.5f, time);
+        Tweener moveY = DamageText_Text.rectTransform.DOAnchorPosY(y+100f, time/2);      
+        Tweener moveY2 = DamageText_Text.rectTransform.DOAnchorPosY(y+50f, time / 2);
+        s.Append(moveY);
+        s.Append(moveY2); 
+        //s.Join(moveX);
+        //s.Join(scale);                 
         yield return new WaitForSeconds(time);
         DamageText.SetActive(false);
     }

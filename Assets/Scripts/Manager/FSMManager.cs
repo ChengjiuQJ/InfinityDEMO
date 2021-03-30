@@ -291,7 +291,7 @@ public class TurnBeginState : BattleState
         if (LifeBody.IsPlayer)
             UIManager.Instance.TurnBegin();
         LifeBody.RecoverEnergyPerRound();
-
+        LifeBody.UpdateBuffsPerTurn();
         //移动摄像机到该物体
         CameraManeger.Instance.Follow = LifeBody.GameObject.transform.Find("LookPos");
         CameraManeger.Instance.LookAt = LifeBody.GameObject.transform.Find("LookPos");

@@ -156,10 +156,14 @@ public class DataManager
 
 public class Data
 {
-    public int ID;
+    public int id;
     public Dictionary<HighValue, Dictionary<LowValue, IDataGetable>> datas;
-    public Data(Dictionary<HighValue, Dictionary<LowValue, IDataGetable>> data)
+    protected Data(Dictionary<HighValue, Dictionary<LowValue, IDataGetable>> data)
     {
         datas = data;
+    }
+    protected Data()
+    {
+
     }
 }

@@ -40,12 +40,23 @@ public class ActionFactory
 public class ActionEventArgs : EventArgs
 {
     public ActionType actionType;
-    public bool Result { get; }
-    public ActionEventArgs(ActionType action, bool result = true)
+    public ActionStatus status;
+    public object[] args;
+    public ActionEventArgs(ActionType action,ActionStatus status,params object[] args)
     {
         actionType = action;
-        Result = result;
+        this.status = status;
+        this.args = args;
     }
+}
+public enum ActionStatus
+{
+    Success,Failed,Running,Abort
+}
+
+public enum ActionFailedSituation
+{
+    NoEnergy
 }
 
 public class MoveAction : IRunable
@@ -80,10 +91,10 @@ public class MoveAction : IRunable
     /// <param name="args">[0]:Vector3 destination,[1]:StoppingDistance,[2]LifeBody Target</param>
     public void Run(params object[] args)
     {
-        self.ActionStart(new ActionEventArgs(ActionType.Move));
+        self.ActionStart(new ActionEventArgs(ActionType.Move,ActionStatus.Running));
         if (self.MaxMoveRange() < 0.5)
         {
-            PlayerController_OnActionEnd(null, new ActionEventArgs(ActionType.Move, false));
+            PlayerController_OnActionEnd(null, new ActionEventArgs(ActionType.Move,ActionStatus.Failed));
             return;
         }
         self.PlayerController.OnActionEnd += PlayerController_OnActionEnd;
@@ -125,7 +136,7 @@ public class NormalAttackAction : IRunable
     /// <param name="args">[0]:LifeBody tatget,</param>
     public void Run(params object[] args)
     {
-        body.ActionStart(new ActionEventArgs(ActionType.NormalAttack));
+        body.ActionStart(new ActionEventArgs(ActionType.NormalAttack,ActionStatus.Running));
         body.LineRenderer.enabled = false;
         body.PlayerController.OnActionEnd += PlayerController_OnActionEnd;
         LifeBody target = (LifeBody)args[0];
@@ -138,7 +149,7 @@ public class NormalAttackAction : IRunable
             }
             else
             {
-                PlayerController_OnActionEnd(null, new ActionEventArgs(ActionType.NormalAttack, false));
+                PlayerController_OnActionEnd(null, new ActionEventArgs(ActionType.NormalAttack,ActionStatus.Failed,ActionFailedSituation.NoEnergy));
             }
         }
         else
@@ -151,28 +162,25 @@ public class NormalAttackAction : IRunable
         var args = (ActionEventArgs)e;
         if (args.actionType == ActionType.Move)
         {
-            if (args.Result)
+            if (args.status==ActionStatus.Success)
             {
-                if (sender is LifeBody target)
-                {
-                    if (EnoughEnergy())
+                if (EnoughEnergy())
                     {
                         body.ChangeEnergy(-GetCostEnergy());
-                        body.StartAttack(target);
+                        body.StartAttack((LifeBody)args.args[0]);
                         return;
                     }
                     else
                     {
                         body.PlayerController.OnActionEnd -= PlayerController_OnActionEnd;
-                        body.ActionEnd(new ActionEventArgs(ActionType.NormalAttack, false));
+                        body.ActionEnd(new ActionEventArgs(ActionType.NormalAttack,ActionStatus.Failed,ActionFailedSituation.NoEnergy));
                         return;
                     }
-                }
             }
             else
             {
                 body.PlayerController.OnActionEnd -= PlayerController_OnActionEnd;
-                body.ActionEnd(new ActionEventArgs(ActionType.NormalAttack, false));
+                body.ActionEnd(new ActionEventArgs(ActionType.NormalAttack,ActionStatus.Failed));
             }
 
         }

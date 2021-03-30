@@ -111,6 +111,8 @@ public class LifeBody : Unit,IDataGetable
     public Dictionary<ActionType, IRunable> actions;
     public LifeBody(GameObject gameObject,PlayerController controller, int lvl):base(gameObject)
     {
+        CurrentEquipments = new List<Equipment>();
+        CurrentBuffs = new List<Buff>();
         if (IsPlayer)
         {
             controller.Outline.enabled = true;
@@ -120,9 +122,12 @@ public class LifeBody : Unit,IDataGetable
             GameManager.Instance.Player = controller;
         }
         else
-            race = 1;
-        CurrentEquipments = new List<Equipment>();
-        CurrentBuffs = new List<Buff>();
+        {
+            race = 0;
+            CurrentBuffs.Add(new Buff(0,-1));
+        }
+            
+        
         CurrentEnergy = MaxEnergy;
         Level = lvl;
         passerbys = new LinkedList<LifeBody>();
@@ -263,6 +268,21 @@ public class LifeBody : Unit,IDataGetable
         PathRendering = false;
     }
 
+    internal void UpdateBuffsPerTurn()
+    {
+        List<Buff> removeList = new List<Buff>();
+        foreach(var buff in CurrentBuffs)
+        {
+            if(buff.turn==-1)
+                continue;
+            buff.turn-=1;
+            if(buff.turn==0)
+                removeList.Add(buff);
+        }
+        foreach(var buff in removeList)
+            CurrentBuffs.Remove(buff);
+    }
+
     public float MaxMoveRange()
     {
         return Speed * CurrentEnergy / 50;
@@ -341,6 +361,7 @@ public class LifeBody : Unit,IDataGetable
     {
         var args = (ActionEventArgs)e;
         IsActing = false;
+
         if (Logger.Instance.showActionLog)
             Debug.Log($"{args.actionType}结束");
         OnActionEnd?.Invoke(null, e);
@@ -383,6 +404,7 @@ public enum HighValue
 {
     肌肉组织强度,神经反射速度,灵魂强度,智力,细胞活性,速度,
     生命,生命恢复速率,精力,精力恢复速率,精力消耗,
+    命中率,
     击打伤害,击打抗性, 击打格挡,
     穿刺伤害,穿刺抗性, 穿刺格挡,
     劈砍伤害,劈砍抗性,劈砍格挡,

@@ -112,7 +112,7 @@ public class ActionNode : LeafNode
         var args = (ActionEventArgs)e;
         if (args.actionType != this.actionType)
             return;
-        if (args.Result)
+        if (args.status==ActionStatus.Success)
             state = BTState.Success;
         else
             state = BTState.Failure;

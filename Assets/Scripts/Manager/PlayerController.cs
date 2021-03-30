@@ -92,12 +92,21 @@ public class PlayerController : MonoBehaviour
             {
                 //能量用尽;
                 agent.isStopped = true;
-                OnActionEnd?.Invoke(args.Length>2?args[2]:null,new ActionEventArgs(ActionType.Move,false));
+                if(args.Length>=3)
+                {
+                    var e = new ActionEventArgs(ActionType.Move,ActionStatus.Failed,ActionFailedSituation.NoEnergy,args[2]);
+                    OnActionEnd?.Invoke(null,e);
+                }
+                else
+                    OnActionEnd?.Invoke(null,new ActionEventArgs(ActionType.Move,ActionStatus.Success));                
                 yield break;
             }
             yield return null;
         }      
-        OnActionEnd?.Invoke(args.Length > 2 ? args[2]:null, new ActionEventArgs(ActionType.Move,true));       
+        if(args.Length>=3)
+            OnActionEnd?.Invoke(null,new ActionEventArgs(ActionType.Move,ActionStatus.Success,args[2]));
+        else
+            OnActionEnd?.Invoke(null,new ActionEventArgs(ActionType.Move,ActionStatus.Success));      
     }
 
     public IEnumerator Attack(LifeBody target)
@@ -109,14 +118,17 @@ public class PlayerController : MonoBehaviour
         var clip = animator.GetCurrentAnimatorClipInfo(0)[0].clip;
         clip.ChangeAnimationEventArgs(target.PlayerController);       
         yield return new WaitForSeconds(clip.length);
-        OnActionEnd?.Invoke(null, new ActionEventArgs(ActionType.NormalAttack));
+        OnActionEnd?.Invoke(null, new ActionEventArgs(ActionType.NormalAttack,ActionStatus.Success));
     }
+
+
+
 
     private void OnHit(PlayerController playerController)
     {
         //判断是否击中
 
-
+        float baseHitRate = DataManager.Instance.GetHighValue(LifeBody,HighValue.命中率);
 
 
 
@@ -168,7 +180,7 @@ public class PlayerController : MonoBehaviour
         agent.isStopped = true;
         agent.ResetPath();
 
-        OnActionEnd?.Invoke(null, new ActionEventArgs(ActionType.none, false));
+        OnActionEnd?.Invoke(null, new ActionEventArgs(ActionType.none,ActionStatus.Abort));
     }
 
     public IEnumerator DoSomething()

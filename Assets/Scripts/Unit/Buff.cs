@@ -4,9 +4,16 @@ using UnityEngine;
 
 public class Buff :Data,IDataGetable
 {
-    public Buff(Dictionary<HighValue, Dictionary<LowValue, IDataGetable>> data):base(data)
+    public int turn;
+    protected Buff(Dictionary<HighValue, Dictionary<LowValue, IDataGetable>> data):base(data)
     {
+    }
 
+    public Buff(int id,int turn)
+    {
+        this.id = id;
+        this.turn=turn;
+        datas= new Dictionary<HighValue, Dictionary<LowValue, IDataGetable>>();
     }
     public float GetData(HighValue high, LowValue low, LifeBody lifeBody = null)
     {
@@ -17,7 +24,6 @@ public class Buff :Data,IDataGetable
                 return data.GetData(high, low, lifeBody);
             }
         }
-        float result = 0f;
-        return result;
+        return DataManager.Instance.RaceData[id].GetData(high,low,lifeBody);
     }
 }

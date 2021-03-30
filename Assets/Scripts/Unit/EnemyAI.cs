@@ -54,7 +54,7 @@ public class EnemyAI : MonoBehaviour
         }
         else
         {
-            LifeBody_OnActionEnd(null, new ActionEventArgs(ActionType.NormalAttack, false));
+            LifeBody_OnActionEnd(null, new ActionEventArgs(ActionType.NormalAttack,ActionStatus.Failed));
         }
         yield return null;
     }
