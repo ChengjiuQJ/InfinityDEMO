@@ -18,6 +18,7 @@ public class DataManager
     }
     public Dictionary<int, Race> RaceData;
     public Dictionary<int, Equipment> EquipmentData;
+    public Dictionary<int,Buff> BuffData;
     public bool Ready { get; private set; }
 
     public float GetHighValue(LifeBody body,HighValue value)
@@ -84,7 +85,7 @@ public class DataManager
                                 temp.Add(tuples[j - 1].Item1, new Dictionary<LowValue, IDataGetable>() { { tuples[j - 1].Item2, exp } });
                         }
                         else
-                            throw new Exception($"Parse Error :source = {nodes[j]}");
+                            temp.Add(tuples[j - 1].Item1, new Dictionary<LowValue, IDataGetable>() { { tuples[j - 1].Item2, new DataValue(nodes[j]) } });
                     }
                 }
                 datas.Add(ID, temp);
@@ -106,6 +107,7 @@ public class DataManager
     {
         LoadData("Race", out RaceData);
         LoadData("Equipment",out EquipmentData);
+        LoadData("Buff",out BuffData);
         Ready = true;
     }
 
@@ -140,7 +142,13 @@ public class DataManager
                         {
                             @params.Add(new Param(f));
                         }
+                        else
+                        {
+                            result = null;
+                            return false;
+                        }
                         break;
+                            
                 }
             }
             result = new ValueExpression(@params);
@@ -164,6 +172,5 @@ public class Data
     }
     protected Data()
     {
-
     }
 }

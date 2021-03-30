@@ -219,7 +219,7 @@ public class CameraManeger : MonoBehaviour
             Camera.transform.position = des;
             */
             //左右旋转
-            Camera.transform.RotateAround(Follow.transform.position, Vector3.up, Input.GetAxis("Honrizon Rotate"));
+            Camera.transform.RotateAround(Follow.transform.position, Vector3.up, 2*Input.GetAxis("Honrizon Rotate"));
             FollowOffset = Camera.transform.position - Follow.transform.position;
 
 

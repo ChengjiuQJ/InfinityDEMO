@@ -94,7 +94,7 @@ public class MoveAction : IRunable
         self.ActionStart(new ActionEventArgs(ActionType.Move,ActionStatus.Running));
         if (self.MaxMoveRange() < 0.5)
         {
-            PlayerController_OnActionEnd(null, new ActionEventArgs(ActionType.Move,ActionStatus.Failed));
+            PlayerController_OnActionEnd(null, new ActionEventArgs(ActionType.Move,ActionStatus.Failed,ActionFailedSituation.NoEnergy));
             return;
         }
         self.PlayerController.OnActionEnd += PlayerController_OnActionEnd;
@@ -180,7 +180,7 @@ public class NormalAttackAction : IRunable
             else
             {
                 body.PlayerController.OnActionEnd -= PlayerController_OnActionEnd;
-                body.ActionEnd(new ActionEventArgs(ActionType.NormalAttack,ActionStatus.Failed));
+                body.ActionEnd(new ActionEventArgs(ActionType.NormalAttack,ActionStatus.Failed,args.args[0]));
             }
 
         }

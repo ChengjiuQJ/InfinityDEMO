@@ -12,6 +12,7 @@ public class UIManager : MonoBehaviour
 
     //战斗
     public Text BattleText_Text;
+    public Text Text;
     public GameObject BattleText;
     public GameObject DamageText;
     public Text DamageText_Text;
@@ -28,14 +29,14 @@ public class UIManager : MonoBehaviour
     {
         
         BattleText_Text.text = "回合开始";
-        StartCoroutine(ShowText());
+        StartCoroutine(ShowBattleText());
     }
     internal void BattleStart()
     {
         BattleText_Text.text = "战斗开始";
-        StartCoroutine(ShowText());
+        StartCoroutine(ShowBattleText());
     }
-    private IEnumerator ShowText()
+    private IEnumerator ShowBattleText()
     {
         Playing = true;
         RectTransform rect = BattleText.GetComponent<RectTransform>();
@@ -81,6 +82,18 @@ public class UIManager : MonoBehaviour
         //s.Join(scale);                 
         yield return new WaitForSeconds(time);
         DamageText.SetActive(false);
+    }
+    public void ShowText(string text,Vector2 position,float time=1f)
+    {
+        Text.text = text;
+        Text.rectTransform.anchoredPosition = position;
+        StartCoroutine(ShowText(time));
+    }
+    public IEnumerator ShowText(float time)
+    {
+        Text.gameObject.SetActive(true);
+        yield return new WaitForSeconds(time);
+        Text.gameObject.SetActive(false);
     }
 
 

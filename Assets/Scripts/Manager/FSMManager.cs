@@ -156,7 +156,10 @@ public class IdleState : LifeBodyState
 
     public override void OnExit(params object[] args)
     {
-        InputManager.Instance.OnMouseDown -= LifeBody.OnMouseDown;
+        if(LifeBody.IsPlayer)
+            InputManager.Instance.OnMouseDown -= LifeBody.OnMouseDown;
+        else
+            LifeBody.AI.Stop();
         LifeBody.PlayerController.StopAllActions();
     }
 
@@ -165,6 +168,8 @@ public class IdleState : LifeBodyState
         //更新鼠标指针
         if(LifeBody.IsPlayer)
             UpDateCursor();
+        else
+            LifeBody.AI.Run();
         //更新敌人
         UpDateEnemy();
         //更新属性

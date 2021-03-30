@@ -2,18 +2,19 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Buff :Data,IDataGetable
+public class Buff : Data, IDataGetable
 {
     public int turn;
-    protected Buff(Dictionary<HighValue, Dictionary<LowValue, IDataGetable>> data):base(data)
+    public Buff(Dictionary<HighValue, Dictionary<LowValue, IDataGetable>> data) : base(data)
     {
+
     }
 
-    public Buff(int id,int turn)
+    public Buff(int id, int turn)
     {
         this.id = id;
-        this.turn=turn;
-        datas= new Dictionary<HighValue, Dictionary<LowValue, IDataGetable>>();
+        this.turn = turn;
+        datas = new Dictionary<HighValue, Dictionary<LowValue, IDataGetable>>();
     }
     public float GetData(HighValue high, LowValue low, LifeBody lifeBody = null)
     {
@@ -24,6 +25,20 @@ public class Buff :Data,IDataGetable
                 return data.GetData(high, low, lifeBody);
             }
         }
-        return DataManager.Instance.RaceData[id].GetData(high,low,lifeBody);
+        return GetBaseData(high, low, lifeBody);
+    }
+    public float GetBaseData(HighValue high, LowValue low, LifeBody lifeBody = null)
+    {
+        if (DataManager.Instance.BuffData.TryGetValue(id, out var data))
+        {
+            if (data.datas.TryGetValue(high, out Dictionary<LowValue, IDataGetable> kv))
+            {
+                if (kv.TryGetValue(low, out IDataGetable d))
+                {
+                    return d.GetData(high, low, lifeBody);
+                }
+            }
+        }
+        return 0f;
     }
 }

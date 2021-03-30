@@ -110,11 +110,18 @@ public class ActionNode : LeafNode
     public void OnActionEnd(object sender,EventArgs e)
     {
         var args = (ActionEventArgs)e;
+        if(args.status==ActionStatus.Abort)
+        {
+            tree.LifeBody.AI.OnActionEnd -= OnActionEnd;
+            state = BTState.Abort;
+            tree.state = state;
+            return;
+        }    
         if (args.actionType != this.actionType)
             return;
         if (args.status==ActionStatus.Success)
             state = BTState.Success;
-        else
+        else 
             state = BTState.Failure;
         tree.LifeBody.AI.OnActionEnd -= OnActionEnd;
         tree.state = state;

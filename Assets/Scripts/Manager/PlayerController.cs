@@ -127,16 +127,35 @@ public class PlayerController : MonoBehaviour
     private void OnHit(PlayerController playerController)
     {
         //判断是否击中
+        bool unArmed = false;
+        if (LifeBody.CurrentWeapon == null)
+        {
+            LifeBody.ChangeEquipment(Equipment.UnArmed);
+            unArmed = true;
+        }
 
         float baseHitRate = DataManager.Instance.GetHighValue(LifeBody,HighValue.命中率);
+        float x = DataManager.Instance.GetHighValue(LifeBody,HighValue.神经反射速度);
+        float y = DataManager.Instance.GetHighValue(playerController.LifeBody,HighValue.神经反射速度);
+        float hitRate = baseHitRate + (x-y)/(x+y);
+        if(hitRate < UnityEngine.Random.Range(0f,1f))
+        {
+            Vector2 position = CameraManeger.Instance.Camera.WorldToScreenPoint(playerController.transform.position);
+            UIManager.Instance.ShowText("MISS!",position);
+            return ;
+        }
 
-
+        float breakArmorLevel = DataManager.Instance.GetHighValue(LifeBody,HighValue.破甲等级);
+        float armorLevel = DataManager.Instance.GetHighValue(playerController.LifeBody,HighValue.护甲等级);
+        float breakArmorRadio = (breakArmorLevel-armorLevel)/(breakArmorLevel+armorLevel);
+        
+        
 
         playerController.animator.SetTrigger("OnHit");
         LifeBody enemy = playerController.LifeBody;
-        if (LifeBody.CurrentWeapon == null)
-            LifeBody.CurrentEquipments.Add(Equipment.UnArmed);
+        
         float dmg1 = DataManager.Instance.GetHighValue(LifeBody, HighValue.击打伤害);
+        dmg1 = Mathf.Max(dmg1*(1+breakArmorRadio),0.8f*dmg1);
         float percent1 = DataManager.Instance.GetHighValue(enemy, HighValue.击打抗性);
         float shield1 = DataManager.Instance.GetHighValue(enemy, HighValue.击打格挡);
         if (percent1 > 0)
@@ -145,22 +164,30 @@ public class PlayerController : MonoBehaviour
             dmg1 = Mathf.Max(dmg1 * (1 + percent1) - shield1, 0f);
 
         float dmg2 = DataManager.Instance.GetHighValue(LifeBody, HighValue.劈砍伤害);
+        dmg2 = dmg2*(1+breakArmorRadio)*(breakArmorLevel>armorLevel?1.2f:1f);
         float percent2 = DataManager.Instance.GetHighValue(enemy, HighValue.劈砍抗性);
-        float shield2 = DataManager.Instance.GetHighValue(enemy, HighValue.击打格挡);
+        float shield2 = DataManager.Instance.GetHighValue(enemy, HighValue.劈砍格挡);
         if (percent2 > 0)
             dmg2 = Mathf.Max(dmg2 / (2 + percent2) - shield2, 0f);
         else
             dmg2 = Mathf.Max(dmg2 * (2 + percent2) - shield2, 0f);
 
         float dmg3 = DataManager.Instance.GetHighValue(LifeBody, HighValue.穿刺伤害);
+        breakArmorRadio = (breakArmorLevel*1.5f-armorLevel)/(breakArmorLevel*1.5f+armorLevel);
+        dmg3= dmg3*breakArmorRadio;
+
         float percent3 = DataManager.Instance.GetHighValue(enemy, HighValue.穿刺抗性);
         float shield3 = DataManager.Instance.GetHighValue(enemy, HighValue.击打格挡);
         if (percent3 > 0)
             dmg3 = Mathf.Max(dmg3 / (1 + percent3) - shield3, 0f);
         else
             dmg3 = Mathf.Max(dmg3 * (1 + percent3) - shield3, 0f);
-        if (LifeBody.CurrentWeapon == null)
+        
+        if(unArmed)
+        {
+            LifeBody.CurrentWeapon = null;
             LifeBody.CurrentEquipments.Remove(Equipment.UnArmed);
+        }
         float dmg = dmg1 + dmg2 + dmg3;
         Vector3 p = CameraManeger.Instance.Camera.WorldToScreenPoint(playerController.transform.Find("LookPos").position);
         UIManager.Instance.ShowDamage(Mathf.RoundToInt(dmg).ToString(), new Vector2(p.x, p.y));
@@ -179,7 +206,6 @@ public class PlayerController : MonoBehaviour
         StopAllCoroutines();
         agent.isStopped = true;
         agent.ResetPath();
-
         OnActionEnd?.Invoke(null, new ActionEventArgs(ActionType.none,ActionStatus.Abort));
     }
 

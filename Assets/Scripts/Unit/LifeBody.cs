@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class LifeBody : Unit,IDataGetable
+public class LifeBody : Unit, IDataGetable
 {
     private static Dictionary<HighValue, Dictionary<LowValue, IDataGetable>> formula;
     public static Dictionary<HighValue, Dictionary<LowValue, IDataGetable>> Formula
@@ -33,17 +33,18 @@ public class LifeBody : Unit,IDataGetable
     public string Name { get { return GameObject.name; } }
     public bool IsPlayer { get { return Name == "Player"; } }
     public Vector3 Position { get { return GameObject.transform.position; } }
+    public Vector2 PositionOnScreen{get{return CameraManeger.Instance.Camera.WorldToScreenPoint(Position);}}
     public Battle CurrentBattle { get; set; }
     public PlayerController PlayerController { get; }
     public EnemyAI AI { get; private set; }
-    public LineRenderer LineRenderer { get;private set; }
+    public LineRenderer LineRenderer { get; private set; }
     private HPBar HPBar { get; set; }
-    private EnergyBar EnergyBar { get; set; } 
+    private EnergyBar EnergyBar { get; set; }
     public bool PathRendering { get; set; }
-    public List<Equipment> CurrentEquipments { get; private set;}
+    public List<Equipment> CurrentEquipments { get; private set; }
     public List<Buff> CurrentBuffs { get; private set; }
 
-
+    public List<Item> CurrentItems{get;private set;}
     public Outline PointTo { get; set; }
     public bool IsActing { get; private set; }
     public event EventHandler OnActionBegin;
@@ -73,7 +74,7 @@ public class LifeBody : Unit,IDataGetable
             return DataManager.Instance.GetHighValue(this, HighValue.速度);
         }
     }
-    public float CurrentEnergy { get; private set;}
+    public float CurrentEnergy { get; private set; }
     public float MaxEnergy
     {
         get
@@ -85,7 +86,7 @@ public class LifeBody : Unit,IDataGetable
     public const float recoverEnergyPerSecond = 20f;
 
     public bool CanBeControlled { get { return IsPlayer; } }
-    
+
     //逻辑控制
     private FSMManager fsm;
     public FSMManager FSM
@@ -101,7 +102,7 @@ public class LifeBody : Unit,IDataGetable
             fsm.RegistState(StateType.turnBegin, new TurnBeginState(this));
             fsm.RegistState(StateType.action, new ActionState(this));
             fsm.RegistState(StateType.turnOver, new TurnOverState(this));
-            fsm.RegistState(StateType.Dead, new DeadState(this));          
+            fsm.RegistState(StateType.Dead, new DeadState(this));
             return fsm;
         }
     }
@@ -109,10 +110,11 @@ public class LifeBody : Unit,IDataGetable
     public Equipment CurrentWeapon { get; set; }
 
     public Dictionary<ActionType, IRunable> actions;
-    public LifeBody(GameObject gameObject,PlayerController controller, int lvl):base(gameObject)
+    public LifeBody(GameObject gameObject, PlayerController controller, int lvl) : base(gameObject)
     {
         CurrentEquipments = new List<Equipment>();
         CurrentBuffs = new List<Buff>();
+        CurrentItems = new List<Item>();
         if (IsPlayer)
         {
             controller.Outline.enabled = true;
@@ -124,10 +126,10 @@ public class LifeBody : Unit,IDataGetable
         else
         {
             race = 0;
-            CurrentBuffs.Add(new Buff(0,-1));
+            CurrentBuffs.Add(new Buff(0, -1));
         }
-            
-        
+
+
         CurrentEnergy = MaxEnergy;
         Level = lvl;
         passerbys = new LinkedList<LifeBody>();
@@ -139,7 +141,7 @@ public class LifeBody : Unit,IDataGetable
             { ActionType.Move, new MoveAction(this) },
             { ActionType.NormalAttack, new NormalAttackAction(this) }
         };
-        
+
         CurrentHP = MaxHP;
     }
 
@@ -173,7 +175,7 @@ public class LifeBody : Unit,IDataGetable
 
     public void Die()
     {
-        
+
     }
 
     public void RecoverEnergyPerRound()
@@ -185,23 +187,23 @@ public class LifeBody : Unit,IDataGetable
     public bool TryGetFirstHitInfo(Vector2 mousePosition, out RaycastHit raycastHit, string tag = null, bool selectSelf = false)
     {
         Ray ray = Camera.main.ScreenPointToRay(mousePosition);
-        if(Physics.Raycast(ray,out raycastHit,GameManager.rayMaxDistance))
+        if (Physics.Raycast(ray, out raycastHit, GameManager.rayMaxDistance))
         {
-            if(raycastHit.collider!=null)
+            if (raycastHit.collider != null)
             {
-                if(tag==null)
+                if (tag == null)
                 {
                     if (raycastHit.collider.gameObject.CompareTag("Ground") || raycastHit.collider.gameObject.CompareTag("LifeBody"))
                     {
-                        if (selectSelf||raycastHit.collider.gameObject != GameObject)
+                        if (selectSelf || raycastHit.collider.gameObject != GameObject)
                             return true;
                     }
                 }
                 else
                 {
-                    if(raycastHit.collider.gameObject.CompareTag(tag)) 
+                    if (raycastHit.collider.gameObject.CompareTag(tag))
                     {
-                        if (selectSelf|| raycastHit.collider.gameObject != GameObject)
+                        if (selectSelf || raycastHit.collider.gameObject != GameObject)
                             return true;
                     }
                 }
@@ -214,8 +216,8 @@ public class LifeBody : Unit,IDataGetable
     {
         if (PathRendering)
             yield break;
-        PathRendering = true;       
-        if(TryGetFirstHitInfo(mousePosition,out RaycastHit target))
+        PathRendering = true;
+        if (TryGetFirstHitInfo(mousePosition, out RaycastHit target))
         {
             var agent = PlayerController.agent;
             agent.isStopped = true;
@@ -225,7 +227,7 @@ public class LifeBody : Unit,IDataGetable
                 yield return null;
             }
             var corners = agent.path.corners;
-            var  distance = agent.GetPathRemainingDistance();
+            var distance = agent.GetPathRemainingDistance();
             agent.ResetPath();
             agent.isStopped = false;
             float maxMoveRange = MaxMoveRange();
@@ -234,7 +236,7 @@ public class LifeBody : Unit,IDataGetable
             gradient.alphaKeys = new GradientAlphaKey[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(1f, 1f) };
             gradient.mode = GradientMode.Fixed;
             LineRenderer.colorGradient = gradient;
-            corners = corners.Lerp(Mathf.RoundToInt(distance*2));
+            corners = corners.Lerp(Mathf.RoundToInt(distance * 2));
             LineRenderer.positionCount = corners.Length;
             LineRenderer.SetPositions(corners);
             LineRenderer.enabled = true;
@@ -254,7 +256,7 @@ public class LifeBody : Unit,IDataGetable
             }
             else
             {
-                if (CurrentEnergy >= GetMoveCostEnergy(Mathf.Max(distance-GetAttackRange(),0f)) + NormalAttackAction.GetCostEnergy())
+                if (CurrentEnergy >= GetMoveCostEnergy(Mathf.Max(distance - GetAttackRange(), 0f)) + NormalAttackAction.GetCostEnergy())
                     GameManager.Instance.SetCursor(CursorStyle.Attack_Eable);
                 else
                     GameManager.Instance.SetCursor(CursorStyle.Attack_Disable);
@@ -271,15 +273,15 @@ public class LifeBody : Unit,IDataGetable
     internal void UpdateBuffsPerTurn()
     {
         List<Buff> removeList = new List<Buff>();
-        foreach(var buff in CurrentBuffs)
+        foreach (var buff in CurrentBuffs)
         {
-            if(buff.turn==-1)
+            if (buff.turn == -1)
                 continue;
-            buff.turn-=1;
-            if(buff.turn==0)
+            buff.turn -= 1;
+            if (buff.turn == 0)
                 removeList.Add(buff);
         }
-        foreach(var buff in removeList)
+        foreach (var buff in removeList)
             CurrentBuffs.Remove(buff);
     }
 
@@ -302,11 +304,11 @@ public class LifeBody : Unit,IDataGetable
     public bool MoveCostEnergy(float distance)
     {
         float energy = distance / Speed * 50;
-        if (CurrentEnergy>energy)
+        if (CurrentEnergy > energy)
         {
             ChangeEnergy(-energy);
             return true;
-        }         
+        }
         else
             return false;
     }
@@ -334,16 +336,16 @@ public class LifeBody : Unit,IDataGetable
             var tuple = this.actions[action].CanRun(args.Position);
             if (tuple.Item1)
             {
-                temp.Add(action,tuple.Item2);
+                temp.Add(action, tuple.Item2);
             }
         }
         if (temp.Count == 0)
             return;
-        List<ActionType> keys = new List<ActionType>(temp.Keys);    
-        if (temp.Count>1)
+        List<ActionType> keys = new List<ActionType>(temp.Keys);
+        if (temp.Count > 1)
         {
             keys.Sort((x, y) => (int)x > (int)y ? -1 : 1);
-            
+
         }
         this.actions[keys[0]].Run(temp[keys[0]]);
     }
@@ -353,25 +355,34 @@ public class LifeBody : Unit,IDataGetable
         var args = (ActionEventArgs)e;
         IsActing = true;
         PathRendering = false;
-        if(Logger.Instance.showActionLog)
-        Debug.Log($"{args.actionType}开始");
+        if (Logger.Instance.showActionLog)
+            Debug.Log($"{args.actionType}开始");
         OnActionBegin?.Invoke(null, e);
     }
     public void ActionEnd(EventArgs e)
     {
         var args = (ActionEventArgs)e;
         IsActing = false;
-
+        if(args.status==ActionStatus.Failed&&IsPlayer)
+        {
+            var type = (ActionFailedSituation)args.args[0];
+            switch(type)
+            {
+                case ActionFailedSituation.NoEnergy:
+                    UIManager.Instance.ShowText("No Energy!",PositionOnScreen);
+                    break;
+            }
+        }
         if (Logger.Instance.showActionLog)
-            Debug.Log($"{args.actionType}结束");
+            Debug.Log($"{Name}{args.actionType}结束");
         OnActionEnd?.Invoke(null, e);
     }
 
-    public bool TryGetData(HighValue high, LowValue low,out float result)
+    public bool TryGetData(HighValue high, LowValue low, out float result)
     {
-        if(Formula.TryGetValue(high,out Dictionary<LowValue,IDataGetable> kv))
+        if (Formula.TryGetValue(high, out Dictionary<LowValue, IDataGetable> kv))
         {
-            if(kv.TryGetValue(low,out IDataGetable data))
+            if (kv.TryGetValue(low, out IDataGetable data))
             {
                 result = data.GetData(high, low, this);
                 return true;
@@ -392,22 +403,37 @@ public class LifeBody : Unit,IDataGetable
         }
         return 0f;
     }
+    public void ChangeEquipment(Equipment equip)
+    {
+        switch(equip.GetText(HighValue.装备类型,LowValue.基础值))
+        {
+            case "武器":
+                CurrentEquipments.Add(equip);
+                if(CurrentWeapon!=null&&CurrentWeapon!=Equipment.UnArmed)
+                    CurrentItems.Add(CurrentWeapon);
+                CurrentWeapon = equip;
+                break;
+                
+        }
+    }
 }
+
 
 public interface IDataGetable
 {
-    public float GetData(HighValue high, LowValue low,LifeBody lifeBody=null);
+    public float GetData(HighValue high, LowValue low, LifeBody lifeBody = null);
 }
 
 
 public enum HighValue
 {
-    肌肉组织强度,神经反射速度,灵魂强度,智力,细胞活性,速度,
-    生命,生命恢复速率,精力,精力恢复速率,精力消耗,
-    命中率,
-    击打伤害,击打抗性, 击打格挡,
-    穿刺伤害,穿刺抗性, 穿刺格挡,
-    劈砍伤害,劈砍抗性,劈砍格挡,
+    肌肉组织强度, 神经反射速度, 灵魂强度, 智力, 细胞活性, 速度,
+    生命, 生命恢复速率, 精力, 精力恢复速率, 精力消耗,
+    命中率, 破甲等级, 护甲等级,
+    击打伤害, 击打抗性, 击打格挡,
+    穿刺伤害, 穿刺抗性, 穿刺格挡,
+    劈砍伤害, 劈砍抗性, 劈砍格挡,
+    装备类型,
     攻击半径,
 
 
@@ -421,17 +447,23 @@ public enum HighValue
 }
 public enum LowValue
 {
-    基础值,基础附加值,百分比,额外固定值
+    基础值, 基础附加值, 百分比, 额外固定值
 }
 
 
-public struct DataValue:IDataGetable
+public struct DataValue : IDataGetable
 {
-    public static DataValue Zero = new DataValue() { data = 0f };
     float data;
+    string text;
     public DataValue(float val)
     {
         data = val;
+        text = string.Empty;
+    }
+    public DataValue(string text)
+    {
+        data = 0f;
+        this.text = text;
     }
     public float GetData(HighValue high, LowValue low)
     {
@@ -442,6 +474,11 @@ public struct DataValue:IDataGetable
     {
         return data;
     }
+    public string GetText()
+    {
+        return text;
+    }
+
 }
 
 public class ValueExpression : IDataGetable
@@ -451,12 +488,12 @@ public class ValueExpression : IDataGetable
     {
         param = @params;
     }
-    public float GetData(HighValue high, LowValue low,LifeBody lifeBody)
+    public float GetData(HighValue high, LowValue low, LifeBody lifeBody)
     {
         Stack<Param> stack = new Stack<Param>();
-        foreach(var p in param)
+        foreach (var p in param)
         {
-            if(p.isOperator)
+            if (p.isOperator)
             {
                 var p2 = stack.Pop().GetData(high, low, lifeBody);
                 var p1 = stack.Pop().GetData(high, low, lifeBody);
@@ -468,12 +505,12 @@ public class ValueExpression : IDataGetable
         return stack.Peek().GetData(high, low, lifeBody);
     }
 }
-public class Param:IDataGetable
+public class Param : IDataGetable
 {
     public bool isOperator;
     public Func<float, float, float> Operator;
     DataValue data;
-    Tuple<HighValue,Func<LifeBody,HighValue,float>> func;
+    Tuple<HighValue, Func<LifeBody, HighValue, float>> func;
     public Param(float f)
     {
         data = new DataValue(f);
@@ -487,7 +524,7 @@ public class Param:IDataGetable
         Operator = op;
         func = null;
     }
-    public Param(Tuple<HighValue,Func<LifeBody,HighValue, float>> func)
+    public Param(Tuple<HighValue, Func<LifeBody, HighValue, float>> func)
     {
         isOperator = false;
         this.func = func;
@@ -496,7 +533,7 @@ public class Param:IDataGetable
     public float GetData(HighValue high, LowValue low, LifeBody lifeBody = null)
     {
         if (func != null)
-            return func.Item2.Invoke(lifeBody,func.Item1);
+            return func.Item2.Invoke(lifeBody, func.Item1);
         else
             return data.GetData(high, low);
     }

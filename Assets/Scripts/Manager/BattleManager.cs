@@ -212,7 +212,12 @@ public class Battle
             part1.Add(add);
         }
         CameraManeger.Instance.StartCoroutine(CameraManeger.Instance.FocusTemporary(add.GameObject.transform.Find("LookPos"),1f));
+        UIManager.Instance.ShowText("加入战斗!",add.PositionOnScreen);
         add.FSM.ChangeState(StateType.battleStart,this);
         add.FSM.ChangeState(StateType.battleIdle);
     }
+}
+public enum DamageType
+{
+    击打,穿刺,劈砍
 }
