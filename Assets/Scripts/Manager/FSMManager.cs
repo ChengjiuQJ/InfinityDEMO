@@ -168,7 +168,9 @@ public class IdleState : LifeBodyState
     public override void OnExit(params object[] args)
     {
         if(lifebody.IsPlayer)
-            InputManager.Instance.OnMouseDown -= lifebody.OnMouseDown;
+        {
+            childFSM?.StopFSM();
+        }           
         else
             lifebody.AI.Stop();
         lifebody.PlayerController.StopAllActions();
@@ -186,7 +188,7 @@ public class IdleState : LifeBodyState
         //更新属性
         UpdateProperty();
         //
-        childFSM.UpdateState();
+        childFSM?.UpdateState();
         //UpdateNavMeshDate();
     }
 
@@ -311,7 +313,7 @@ public class Idle_Idle_State : IdleState
 
     public override void OnExit(params object[] args)
     {
-
+        InputManager.Instance.OnMouseDown-=OnMouseDown;
     }
 
 }
