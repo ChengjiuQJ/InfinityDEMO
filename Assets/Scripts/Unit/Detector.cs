@@ -9,16 +9,20 @@ public class Detector : MonoBehaviour
     {
         if (other.CompareTag("LifeBody")&&other.gameObject!=controller.gameObject)
         {
-            Debug.Log($"{other.gameObject.name}进入{controller.gameObject.name}检测范围");
-            controller.LifeBody.passerbys.AddLast(other.gameObject.GetComponent<PlayerController>().LifeBody);
+            var target = other.gameObject.GetComponent<PlayerController>();
+            if(controller.LifeBody.IsPlayer)
+                target.Outline.enabled = true;
+            controller.LifeBody.passerbys.AddLast(target.LifeBody);
         }
     }
     private void OnTriggerExit(Collider other)
     {
         if (other.CompareTag("LifeBody")&& other.gameObject != controller.gameObject)
         {
-            Debug.Log($"{other.gameObject.name}离开{controller.gameObject.name}检测范围");
-            controller.LifeBody.passerbys.Remove(other.gameObject.GetComponent<PlayerController>().LifeBody);
+            var target = other.gameObject.GetComponent<PlayerController>();
+            if(controller.LifeBody.IsPlayer)
+                target.Outline.enabled = false;
+            controller.LifeBody.passerbys.Remove(target.LifeBody);
         }
     }
 }

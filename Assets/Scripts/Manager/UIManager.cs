@@ -18,6 +18,9 @@ public class UIManager : MonoBehaviour
     public Text DamageText_Text;
 
 
+    public List<Button> SkillButtons;
+
+
     private void Awake()
     {
         Instance = GetComponent<UIManager>();

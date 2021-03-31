@@ -13,6 +13,7 @@ public class InputManager : MonoBehaviour
     public bool Started { get; private set; }
     
     public static Vector2 CusorOffset = new Vector2(10, 5);
+
     public Button FinishTurnButton;
     private Dictionary<ActionType,KeyCode> ShortCuts;
     private Dictionary<StateType, Dictionary<ActionType, KeyCode>> ShortCutsConfig;
@@ -70,6 +71,7 @@ public class InputManager : MonoBehaviour
         ShortCuts.Add(ActionType.RotateView, KeyCode.Mouse2);
         ShortCuts.Add(ActionType.Move, KeyCode.Mouse1);
         ShortCuts.Add(ActionType.NormalAttack, KeyCode.Mouse1);
+        ShortCuts.Add(ActionType.UseSkill,KeyCode.Mouse0);
         ShortCutsConfig.Add(StateType.BattleMode, ShortCuts);
     }
     
@@ -167,7 +169,7 @@ public enum ActionType
     SwitchCamera1,SwitchCamera2,ScrollViewRange,RotateView,
 
     //人物行为
-    Move,NormalAttack,
+    Move,NormalAttack,Analyse,UseSkill,
     
 
 

@@ -26,6 +26,8 @@ public class ActionFactory
                 return new MoveAction(lifeBody);
             case ActionType.NormalAttack:
                 return new NormalAttackAction(lifeBody);
+            case ActionType.UseSkill:
+                return new UsingSkillAction();
             default:
             return null;
         }
@@ -197,6 +199,21 @@ public class NormalAttackAction : IRunable
         return 50f;
     }
 }
+
+public class UsingSkillAction : IRunable
+{
+    public Tuple<bool, object> CanRun(params object[] args)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void Run(params object[] args)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+
 
 public interface IRunable
 {

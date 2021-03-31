@@ -19,6 +19,7 @@ public class DataManager
     public Dictionary<int, Race> RaceData;
     public Dictionary<int, Equipment> EquipmentData;
     public Dictionary<int,Buff> BuffData;
+    public Dictionary<int,Skill> SkillData;
     public bool Ready { get; private set; }
 
     public float GetHighValue(LifeBody body,HighValue value)
@@ -108,6 +109,7 @@ public class DataManager
         LoadData("Race", out RaceData);
         LoadData("Equipment",out EquipmentData);
         LoadData("Buff",out BuffData);
+        LoadData("Skill",out SkillData);
         Ready = true;
     }
 
